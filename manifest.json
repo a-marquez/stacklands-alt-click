@@ -1,0 +1,7 @@
+{
+  "name": "Alt Click",
+  "description": "Alt Click to drag cards from containers.",
+  "version_number": "0.1.0",
+  "dependencies": ["BepInEx-BepInExPack_Stacklands-5.4.2100"],
+  "website_url": "https://github.com/a-marquez/stacklands-alt-click"
+}
