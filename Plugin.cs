@@ -41,7 +41,7 @@ namespace StacklandsAltClick
                 return;
             }
 
-            if (__instance.Parent.CardData is not HeavyFoundation) {
+            if (__instance.Parent?.CardData is not HeavyFoundation) {
                 return;
             }
 
