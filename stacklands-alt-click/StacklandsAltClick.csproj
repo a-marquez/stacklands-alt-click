@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>net4.6.1</TargetFramework>
-    <AssemblyName>BetterMouseControls</AssemblyName>
-    <Product>BetterMouseControls</Product>
-    <Description>Better mouse controls</Description>
-    <Version>1.1.1</Version>
+    <AssemblyName>StacklandsAltClick</AssemblyName>
+    <Product>StacklandsAltClick</Product>
+    <Description>Alt click functionality</Description>
+    <Version>0.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -27,7 +28,7 @@
   <PropertyGroup>
     <GAME_NAME>Stacklands</GAME_NAME>
     <GAME_STEAM_ID>1948280</GAME_STEAM_ID>
-    <MOD_NAME>BetterMouseControls</MOD_NAME>
+    <MOD_NAME>StacklandsAltClick</MOD_NAME>
     <R2MM_PROFILE>Default</R2MM_PROFILE>
   </PropertyGroup>
   <PropertyGroup>
@@ -52,8 +53,9 @@
     </When>
   </Choose>
   <PropertyGroup>
-    <OUTPUT_PATH Condition="!Exists('$(OUTPUT_PATH)')">$(R2MM_PATH)/BepInEx/plugins/$(MOD_NAME)</OUTPUT_PATH>
-    <OUTPUT_PATH Condition="!Exists('$(OUTPUT_PATH)')">$(GAME_PATH)/BepInEx/plugins/$(MOD_NAME)</OUTPUT_PATH>
+    <!-- <OUTPUT_PATH Condition="!Exists('$(OUTPUT_PATH)')">$(R2MM_PATH)/BepInEx/plugins/$(MOD_NAME)</OUTPUT_PATH>
+    <OUTPUT_PATH Condition="!Exists('$(OUTPUT_PATH)')">$(GAME_PATH)/BepInEx/plugins/$(MOD_NAME)</OUTPUT_PATH> -->
+    <OUTPUT_PATH Condition="!Exists('$(OUTPUT_PATH)')">C:\Users\albert\AppData\Roaming\Thunderstore Mod Manager\DataFolder\Stacklands\profiles\Default\BepInEx\plugins\$(MOD_NAME)</OUTPUT_PATH>
     <TMP_OUTPUT_PATH>$(TargetDir)/tmp</TMP_OUTPUT_PATH>
   </PropertyGroup>
   <Target Name="PrintVars" BeforeTargets="BeforeBuild">
@@ -62,7 +64,7 @@
     <Message Text="Output Path: $(OUTPUT_PATH)" Importance="high" />
   </Target>
   <Target Name="CopyToGameDir" AfterTargets="AfterBuild">
-    <RemoveDir Directories="$(TMP_OUTPUT_PATH)" />
+    <!-- <RemoveDir Directories="$(TMP_OUTPUT_PATH)" /> -->
     <MakeDir Directories="$(OUTPUT_PATH)" />
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(TMP_OUTPUT_PATH)" />
     <!-- <ZipDirectory Overwrite="true" SourceDirectory="$(TMP_OUTPUT_PATH)" DestinationFile="$(OUTPUT_PATH)/$(MOD_NAME)-Nexus.zip" /> -->
@@ -71,6 +73,7 @@
     <Copy SourceFiles="icon.png" DestinationFolder="$(TMP_OUTPUT_PATH)" />
     <ZipDirectory Overwrite="true" SourceDirectory="$(TMP_OUTPUT_PATH)" DestinationFile="$(OUTPUT_PATH)/$(MOD_NAME)-Thunderstore.zip" />
     <Unzip SourceFiles="$(OUTPUT_PATH)/$(MOD_NAME)-Thunderstore.zip" DestinationFolder="$(OUTPUT_PATH)"/>
-    <RemoveDir Directories="$(TMP_OUTPUT_PATH)" />
+    <!-- <RemoveDir Directories="$(TMP_OUTPUT_PATH)" /> -->
   </Target>
+
 </Project>
