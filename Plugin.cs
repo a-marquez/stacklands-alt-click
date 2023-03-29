@@ -15,7 +15,7 @@ namespace StacklandsAltClick
 
         static ManualLogSource L;
 
-        private void Awake()
+        public void Awake()
         {
             L = Logger;
             try
@@ -31,12 +31,12 @@ namespace StacklandsAltClick
         // Reference: https://github.com/benediktwerner/Stacklands-BugFixes-Mod/blob/master/Plugin.cs#L65
         [HarmonyPatch(typeof(GameCard), nameof(GameCard.StartDragging))]
         [HarmonyPrefix]
-        private static void DontDetachContainersFromGlueAfterAltClicking(GameCard __instance, out GameCard __state)
+        public static void GameCard_StartDragging_Prefix(GameCard __instance, out GameCard __state)
         {
 
             __state = null;
 
-            if (!InputController.instance.GetKey(Key.LeftAlt) && !InputController.instance.GetKey(Key.RightAlt))
+            if (!checkIfAltPressed())
             {
                 return;
             }
@@ -51,9 +51,9 @@ namespace StacklandsAltClick
 
         [HarmonyPatch(typeof(GameCard), nameof(GameCard.StartDragging))]
         [HarmonyPostfix]
-        public static void StartDragging(GameCard __instance, GameCard __state)
+        public static void GameCard_StartDragging_Postfix(GameCard __instance, GameCard __state)
         {
-            if (!InputController.instance.GetKey(Key.LeftAlt) && !InputController.instance.GetKey(Key.RightAlt))
+            if (!checkIfAltPressed())
             {
                 return;
             }
@@ -81,6 +81,7 @@ namespace StacklandsAltClick
             else
             {
                 newCard = WorldManager.instance.AllCards.Last().GetRootCard();
+                newCard.Velocity = new Vector3();
                 if (__state)
                 {
                     __instance.SetParent(__state);
@@ -92,13 +93,52 @@ namespace StacklandsAltClick
             WorldManager.instance.DraggingDraggable = newCard;
             WorldManager.instance.DraggingDraggable.DragStartPosition = WorldManager.instance.DraggingDraggable.transform.position;
             WorldManager.instance.grabOffset = WorldManager.instance.mouseWorldPosition - WorldManager.instance.DraggingDraggable.transform.position;
-            WorldManager.instance.DraggingDraggable.StartDragging();
+            //WorldManager.instance.DraggingDraggable.StartDragging();
         }
         public static bool checkIfClickableChest(CardData chestCandidate)
         {
             return (chestCandidate is Chest chest && chest.CoinCount > 0)
                 || (chestCandidate is ResourceChest resourceChest && resourceChest.ResourceCount > 0);
         }
+        public static bool checkIfAltPressed()
+        {
+            return InputController.instance.GetKey(Key.LeftAlt) || InputController.instance.GetKey(Key.RightAlt);
+        }
 
+        [HarmonyPatch(typeof(Draggable), nameof(Draggable.StartDragging))]
+        [HarmonyPrefix]
+        public static void Draggable_StartDragging_Prefix(Draggable __instance)
+        {
+            L.LogInfo(__instance.name);
+            if (__instance is not Boosterpack pack)
+            {
+                return;
+            }
+            if (!checkIfAltPressed())
+            {
+                return;
+            }
+
+            int previousCardCount = WorldManager.instance.AllCards.Count;
+            __instance.Clicked();
+            Draggable newDrag;
+
+            if (previousCardCount >= WorldManager.instance.AllCards.Count)
+            {
+                newDrag = __instance;
+            }
+            else
+            {
+                newDrag = WorldManager.instance.AllCards.Last().GetRootCard();
+                newDrag.Velocity = new Vector3();
+            }
+
+            newDrag.DragTag = null;
+
+            WorldManager.instance.DraggingDraggable = newDrag;
+            WorldManager.instance.DraggingDraggable.DragStartPosition = WorldManager.instance.DraggingDraggable.transform.position;
+            WorldManager.instance.grabOffset = WorldManager.instance.mouseWorldPosition - WorldManager.instance.DraggingDraggable.transform.position;
+            //WorldManager.instance.DraggingDraggable.StartDragging();
+        }
     }
 }
