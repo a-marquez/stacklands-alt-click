@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using BepInEx;
 using BepInEx.Configuration;
@@ -109,7 +110,6 @@ namespace StacklandsAltClick
         [HarmonyPrefix]
         public static void Draggable_StartDragging_Prefix(Draggable __instance)
         {
-            L.LogInfo(__instance.name);
             if (__instance is not Boosterpack pack)
             {
                 return;
@@ -140,5 +140,75 @@ namespace StacklandsAltClick
             WorldManager.instance.grabOffset = WorldManager.instance.mouseWorldPosition - WorldManager.instance.DraggingDraggable.transform.position;
             //WorldManager.instance.DraggingDraggable.StartDragging();
         }
+    
+        [HarmonyPatch(typeof(Draggable), nameof(Draggable.Clicked))]
+        [HarmonyPostfix]
+        public static void Draggable_Clicked_Postfix(Draggable __instance)
+        {
+            if (__instance is not BuyBoosterBox pack)
+            {
+                return;
+            }
+            if (!checkIfAltPressed())
+            {
+                return;
+            }
+            int cost = pack.GetCurrentCost();
+            if (cost <= 0 )
+            {
+                return;
+            }
+            if (pack.BuyWithGold && cost > WorldManager.instance.GetGoldCount(includeInChest: true))
+            {
+                return;
+            }
+            if (!pack.BuyWithGold && cost > WorldManager.instance.GetShellCount(includeInChest: true))
+            {
+                return;
+            }
+
+            List<CardData> coins = pack.BuyWithGold
+                ? WorldManager.instance.GetCards<Gold>().Select(gold => gold as CardData).ToList()
+                : WorldManager.instance.GetCards<Shell>().Select(shell => shell as CardData).ToList(); //this is so stupid
+
+            if (cost != coins.Count)
+            {
+                coins.Sort((coin1, coin2) => (int)(Vector3.Distance(coin1.MyGameCard.GetRootCard().transform.position, __instance.transform.position) - Vector3.Distance(coin2.MyGameCard.GetRootCard().transform.position, __instance.transform.position)));
+            }
+
+            for (var i = 0; i < coins.Count && cost > 0; i++, cost--)
+            {
+                coins[i].MyGameCard.RemoveFromStack();
+                pack.CardDropped(coins[i].MyGameCard);
+            }
+
+            if (cost <= 0)
+            {
+                return;
+            }
+
+            List<Chest> chests = WorldManager.instance.GetCards<Chest>();
+            chests.Sort((chest1, chest2) => (int)(Vector3.Distance(chest1.MyGameCard.GetRootCard().transform.position, __instance.transform.position) - Vector3.Distance(chest2.MyGameCard.GetRootCard().transform.position, __instance.transform.position)));
+            GameCard parent = null;
+            GameCard child = null;
+            for (var i = 0; i < chests.Count && cost > 0; i++)
+            {
+                
+                if (pack.BuyWithGold != (chests[i].HeldCardId == "gold"))
+                {
+                    continue;
+                }
+                cost -= chests[i].CoinCount;
+                parent = chests[i].MyGameCard.Parent;
+                child = chests[i].MyGameCard.Child;
+                pack.CardDropped(chests[i].MyGameCard);
+                chests[i].MyGameCard.SetParent(parent);
+                chests[i].MyGameCard.SetChild(child);
+                chests[i].MyGameCard.Velocity = new Vector3();
+                chests[i].MyGameCard.RotWobble(0);
+            }
+		    AudioManager.me.PlaySound2D(AudioManager.me.CardDestroy, UnityEngine.Random.Range(0.8f, 1.2f), 0.3f);
+        }
+        
     }
 }
